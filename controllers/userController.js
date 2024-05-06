@@ -1,8 +1,8 @@
 const asyncHandler = require("express-async-handler");
-const User = require("../database/userModel");
+const User = require("../database/user");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const Token = require("../database/tokenModel");
+const Token = require("../database/token");
 const crypto = require("crypto");
 const sendEmail = require("../utilities/sendemail");
 
