@@ -4,18 +4,16 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const Token = require("../database/token");
 const crypto = require("crypto");
-const sendEmail = require("../utilities/sendEmail");
+const sendEmail = require("../utilities/sendEmail")
 
-// Generate Token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 };
 
-// Register User
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
-  // Validation
+
   if (!name || !email || !password) {
     res.status(400);
     throw new Error("Please fill in all required fields");
@@ -25,7 +23,6 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Password must be up to 6 characters");
   }
 
-  // Check if user email already exists
   const userExists = await User.findOne({ email });
 
   if (userExists) {
@@ -33,17 +30,14 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Email has already been registered");
   }
 
-  // Create new user
   const user = await User.create({
     name,
     email,
     password,
   });
 
-  //   Generate Token
   const token = generateToken(user._id);
 
-  // Send HTTP-only cookie
   res.cookie("token", token, {
     path: "/",
     httpOnly: true,
@@ -69,32 +63,24 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// Login User
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  // Validate Request
   if (!email || !password) {
     res.status(400);
     throw new Error("Please add email and password");
   }
 
-  // Check if user exists
   const user = await User.findOne({ email });
 
   if (!user) {
     res.status(400);
     throw new Error("User not found, please signup");
   }
-
-  // User exists, check if password is correct
   const passwordIsCorrect = await bcrypt.compare(password, user.password);
-
-  //   Generate Token
   const token = generateToken(user._id);
   
   if(passwordIsCorrect){
-   // Send HTTP-only cookie
   res.cookie("token", token, {
     path: "/",
     httpOnly: true,
@@ -120,7 +106,6 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-// Logout User
 const logout = asyncHandler(async (req, res) => {
   res.cookie("token", "", {
     path: "/",
@@ -132,7 +117,6 @@ const logout = asyncHandler(async (req, res) => {
   return res.status(200).json({ message: "Successfully Logged Out" });
 });
 
-// Get User Data
 const getUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -152,13 +136,11 @@ const getUser = asyncHandler(async (req, res) => {
   }
 });
 
-// Get Login Status
 const loginStatus = asyncHandler(async (req, res) => {
   const token = req.cookies.token;
   if (!token) {
     return res.json(false);
   }
-  // Verify Token
   const verified = jwt.verify(token, process.env.JWT_SECRET);
   if (verified) {
     return res.json(true);
@@ -166,7 +148,6 @@ const loginStatus = asyncHandler(async (req, res) => {
   return res.json(false);
 });
 
-// Update User
 const updateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -201,16 +182,15 @@ const changePassword = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("User not found, please signup");
   }
-  //Validate
+
   if (!oldPassword || !password) {
     res.status(400);
     throw new Error("Please add old and new password");
   }
 
-  // check if old password matches password in DB
+  
   const passwordIsCorrect = await bcrypt.compare(oldPassword, user.password);
 
-  // Save new password
   if (user && passwordIsCorrect) {
     user.password = password;
     await user.save();
@@ -230,23 +210,18 @@ const forgotPassword = asyncHandler(async (req, res) => {
     throw new Error("User does not exist");
   }
 
-  // Delete token if it exists in DB
   let token = await Token.findOne({ userId: user._id });
   if (token) {
     await token.deleteOne();
   }
-
-  // Create Reste Token
   let resetToken = crypto.randomBytes(32).toString("hex") + user._id;
   console.log(resetToken);
 
-  // Hash token before saving to DB
   const hashedToken = crypto
     .createHash("sha256")
     .update(resetToken)
     .digest("hex");
 
-  // Save Token to DB
   await new Token({
     userId: user._id,
     token: hashedToken,
@@ -254,10 +229,9 @@ const forgotPassword = asyncHandler(async (req, res) => {
     expiresAt: Date.now() + 30 * (60 * 1000), // Thirty minutes
   }).save();
 
-  // Construct Reset Url
+
   const resetUrl = `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`;
 
-  // Reset Email
   const message = `
       <h2>Hello ${user.name}</h2>
       <p>Please use the url below to reset your password</p>  
@@ -281,18 +255,15 @@ const forgotPassword = asyncHandler(async (req, res) => {
   }
 });
 
-// Reset Password
 const resetPassword = asyncHandler(async (req, res) => {
   const { password } = req.body;
   const { resetToken } = req.params;
 
-  // Hash token, then compare to Token in DB
   const hashedToken = crypto
     .createHash("sha256")
     .update(resetToken)
     .digest("hex");
 
-  // fIND tOKEN in DB
   const userToken = await Token.findOne({
     token: hashedToken,
     expiresAt: { $gt: Date.now() },
@@ -302,8 +273,6 @@ const resetPassword = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Invalid or Expired Token");
   }
-
-  // Find user
   const user = await User.findOne({ _id: userToken.userId });
   user.password = password;
   await user.save();
