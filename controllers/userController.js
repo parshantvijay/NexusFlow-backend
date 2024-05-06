@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const Token = require("../database/token");
 const crypto = require("crypto");
-const sendEmail = require("../utilities/sendemail");
+const sendEmail = require("../utilities/sendEmail");
 
 // Generate Token
 const generateToken = (id) => {
