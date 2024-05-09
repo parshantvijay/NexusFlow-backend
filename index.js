@@ -17,16 +17,18 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(
-  cors()
-);
+
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}))
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Routes Middleware
-app.use("/api/users", userRoute);
-app.use("/api/products", productRoute);
-app.use("/api/contactus", contactRoute);
+app.use("/users", userRoute);
+app.use("/products", productRoute);
+app.use("/contactus", contactRoute);
 
 // Routes
 app.get("/", (req, res) => {

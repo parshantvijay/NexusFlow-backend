@@ -4,7 +4,8 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const Token = require("../database/token");
 const crypto = require("crypto");
-const sendEmail = require("../utilities/sendEmail")
+const sendEmail = require("../utilities/sendEmail");
+const { error } = require("console");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" });
@@ -15,18 +16,29 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
   if (!name || !email || !password) {
-    res.status(400);
+    res.status(200).json({
+      statusCode: false,
+      error: "Please fill in all required fields"
+    });
     throw new Error("Please fill in all required fields");
   }
+
   if (password.length < 6) {
-    res.status(400);
+    res.status(200).json({
+      statusCode: false,
+      error: "Password must be up to 6 characters"
+    });
     throw new Error("Password must be up to 6 characters");
   }
 
   const userExists = await User.findOne({ email });
 
   if (userExists) {
-    res.status(400);
+    res.status(200).json({
+      statusCode: false,
+      error: "Email has already been registered"
+    });
+
     throw new Error("Email has already been registered");
   }
 
@@ -48,6 +60,22 @@ const registerUser = asyncHandler(async (req, res) => {
 
   if (user) {
     const { _id, name, email, photo, phone, bio } = user;
+
+    const subject = "Welcome to Nexus Flow!";
+    const message = `
+    <p>Hey ${name}!</p>
+    <p>Welcome to Nexus Flow!</p>
+    <p>Thank you for registering with us. We're excited to have you on board.</p>
+    <p>Feel free to explore our website and manage your inventory efficiently.</p>
+    <p>If you have any questions or need assistance, don't hesitate to contact us.</p>
+    <p>Best regards,</p>
+    <p>The Nexus Flow Team</p>
+  `;
+    const send_to = email;
+    const sent_from = "parshantdadlani28@gmail.com";
+    
+    await sendEmail(subject, message, send_to, sent_from);
+
     res.status(201).json({
       _id,
       name,
@@ -56,9 +84,13 @@ const registerUser = asyncHandler(async (req, res) => {
       phone,
       bio,
       token,
+      statusCode: true
     });
   } else {
-    res.status(400);
+    res.status(200).json({
+      statusCode: false,
+      error: "Invalid user data"
+    });
     throw new Error("Invalid user data");
   }
 });
