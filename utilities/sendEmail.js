@@ -1,5 +1,4 @@
 const nodemailer = require("nodemailer");
-
 const sendEmail = async (subject, message, send_to, sent_from) => {
   // Create Email Transporter
   const transporter = nodemailer.createTransport({
