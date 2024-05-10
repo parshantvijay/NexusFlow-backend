@@ -18,7 +18,10 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.use(cors())
+app.use(cors({
+  origin: "https://the-nexus-flow.vercel.app",
+  credentials: true
+}))
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
