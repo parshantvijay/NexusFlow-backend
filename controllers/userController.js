@@ -272,7 +272,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
       <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
 
       <p>Regards...</p>
-      <p>Pinvent Team</p>
+      <p>The NexusFlow Team</p>
     `;
   const subject = "Password Reset Request";
   const send_to = user.email;
